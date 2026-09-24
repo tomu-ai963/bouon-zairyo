@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>防音室 材料帳</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0ED; --surface:#FFFFFF; --ink:#1F2528; --muted:#5E676B; --line:#CDD2CD;
+  --accent:#2E6F62; --accent-soft:#DDEBE7; --warn:#A86B12; --danger:#B83A2E;
+  --tag-memo:#E7E9E4; --tag-net:#DDEBE7; --tag-est:#F3E6CF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#171B1D; --surface:#20262A; --ink:#E8ECEA; --muted:#9AA4A7; --line:#343C40;
+    --accent:#6FB7A6; --accent-soft:#233A35; --warn:#E0A74A; --danger:#E0786C;
+    --tag-memo:#2B3236; --tag-net:#233A35; --tag-est:#3A3122;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#171B1D; --surface:#20262A; --ink:#E8ECEA; --muted:#9AA4A7; --line:#343C40;
+  --accent:#6FB7A6; --accent-soft:#233A35; --warn:#E0A74A; --danger:#E0786C;
+  --tag-memo:#2B3236; --tag-net:#233A35; --tag-est:#3A3122;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Sans","Noto Sans JP","Yu Gothic",system-ui,sans-serif;
+  font-size:16px; line-height:1.6; font-variant-numeric:tabular-nums;
+  -webkit-text-size-adjust:100%;
+}
+main{max-width:640px;margin:0 auto;padding:20px 16px 150px}
+h1{font-size:1.6rem;font-weight:700;margin:4px 0 2px;letter-spacing:.02em}
+.lead{color:var(--muted);font-size:.9rem;margin:0 0 20px}
+h2{font-size:1.1rem;font-weight:700;margin:28px 0 10px;display:flex;justify-content:space-between;align-items:baseline}
+h2 small{font-weight:400;color:var(--muted);font-size:.85rem}
+h3{font-size:.9rem;font-weight:500;color:var(--muted);margin:18px 0 6px;padding-left:2px}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;color:var(--muted)}
+input,select,textarea{
+  font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);
+  border-radius:8px;padding:9px 10px;width:100%;min-width:0;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,summary:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+.roomout{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:.92rem}
+.roomout b{font-size:1.05rem}
+
+.item{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:8px}
+.item.off{opacity:.5}
+.itop{display:flex;gap:10px;align-items:flex-start}
+.itop input[type=checkbox]{width:22px;height:22px;margin:2px 0 0;flex:none;accent-color:var(--accent)}
+.iname{flex:1;min-width:0}
+.iname strong{font-weight:500;display:block;word-break:break-all}
+.isize{color:var(--muted);font-size:.85rem}
+.tag{flex:none;font-size:.72rem;padding:2px 8px;border-radius:99px;white-space:nowrap;margin-top:2px}
+.tag.memo{background:var(--tag-memo)}
+.tag.net{background:var(--tag-net);color:var(--accent)}
+.tag.est{background:var(--tag-est);color:var(--warn)}
+
+.nums{display:grid;grid-template-columns:auto 1fr 1fr;gap:10px;margin-top:10px;align-items:center}
+.qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.qty button{border:0;background:var(--bg);color:var(--ink);font:inherit;width:36px;height:40px;font-size:1.1rem;cursor:pointer}
+.qty input{border:0;border-radius:0;width:52px;text-align:center;padding:8px 2px;background:var(--surface)}
+.qty span{font-size:.8rem;color:var(--muted);padding:0 8px 0 2px}
+.val{text-align:right;line-height:1.3}
+.val b{display:block;font-weight:500;font-size:1rem}
+.val small{color:var(--muted);font-size:.78rem}
+.val .missing{color:var(--warn);font-size:.85rem;font-weight:500}
+.note{font-size:.8rem;color:var(--muted);margin-top:8px}
+.autoline{font-size:.8rem;margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.autoline .a{color:var(--accent)}
+.autoline .m{color:var(--warn)}
+.autoline button{font:inherit;font-size:.78rem;border:1px solid var(--accent);color:var(--accent);background:transparent;border-radius:99px;padding:2px 10px;cursor:pointer}
+.check{display:flex;align-items:center;gap:8px;font-size:.9rem;grid-column:1/-1}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.sub{grid-column:1/-1;font-size:.82rem;color:var(--muted);margin:4px 0 -4px}
+
+details.edit{margin-top:8px}
+details.edit summary{font-size:.85rem;color:var(--accent);cursor:pointer;list-style:none;padding:4px 0}
+details.edit summary::-webkit-details-marker{display:none}
+details.edit[open] summary{margin-bottom:8px}
+.efields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.efields .full{grid-column:1/-1}
+.row-btn{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{font:inherit;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 14px;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+:root[data-theme="dark"] .btn.primary{color:#10201C}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#10201C}}
+.btn.danger{color:var(--danger)}
+.add{width:100%;margin-top:6px;border-style:dashed;color:var(--accent)}
+textarea{min-height:120px;font-size:.8rem;margin-top:8px}
+.disclaimer{font-size:.8rem;color:var(--muted);margin-top:24px}
+
+/* bottom bar */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:10;
+  background:var(--surface);border-top:1px solid var(--line);
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));
+}
+.bar-in{max-width:640px;margin:0 auto}
+.bar-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.bar-top div{line-height:1.25}
+.bar-top small{display:block;color:var(--muted);font-size:.75rem}
+.bar-top b{font-size:1.05rem;font-weight:700}
+.bar-top .r{text-align:right}
+.meter{position:relative;height:10px;border-radius:5px;background:var(--bg);margin-top:8px;overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--accent);transition:width .25s ease}
+.meter.warn i{background:var(--warn)}
+.meter.over i{background:var(--danger)}
+.meter-cap{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:3px}
+.meter-cap .st{font-weight:500}
+.st.ok{color:var(--accent)} .st.warn{color:var(--warn)} .st.over{color:var(--danger)}
+@media (prefers-reduced-motion: reduce){.meter i{transition:none}}
+@media (min-width:520px){.fields{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+<main>
+  <h1>防音室 材料帳</h1>
+  <p class="lead">部屋の寸法を入れると、材料の数が自動で決まります。数は後から手で直せます。</p>
+
+  <h2>部屋</h2>
+  <div class="panel">
+    <div class="fields">
+      <label class="f">床の幅（m）<input id="rw" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label class="f">床の奥行（m）<input id="rd" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label class="f">天井の高さ（m）<input id="rh" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label class="f">1畳の広さ
+        <select id="rt">
+          <option value="1.62">一般的な目安（1.62m²）</option>
+          <option value="1.82">本間（1.82m²）</option>
+          <option value="1.65">中京間（1.65m²）</option>
+          <option value="1.55">江戸間（1.55m²）</option>
+          <option value="1.45">団地間（1.45m²）</option>
+        </select>
+      </label>
+      <label class="f">中に置くもの（kg）<input id="rc" type="number" inputmode="decimal" step="1" min="0" placeholder="人・楽器・家具"></label>
+      <label class="f">間柱の間隔
+        <select id="rp">
+          <option value="0.455">455mm</option>
+          <option value="0.303">303mm</option>
+          <option value="0.606">606mm</option>
+        </select>
+      </label>
+      <p class="sub">ドア</p>
+      <label class="f">幅（m）<input id="rdw" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label class="f">高さ（m）<input id="rdh" type="number" inputmode="decimal" step="0.01" min="0"></label>
+      <label class="f">枚数<input id="rdn" type="number" inputmode="numeric" step="1" min="0"></label>
+      <label class="check"><input id="rceil" type="checkbox">天井にもボードや遮音材を張る</label>
+    </div>
+    <div class="roomout" id="roomout"></div>
+  </div>
+
+  <h2>材料 <small id="count"></small></h2>
+  <div id="list"></div>
+  <button class="btn add" id="addBtn">＋ 材料を追加</button>
+
+  <h2>データ</h2>
+  <div class="panel">
+    <div class="row-btn">
+      <button class="btn" id="expBtn">書き出す</button>
+      <button class="btn" id="impBtn">貼り付けて読み込む</button>
+      <button class="btn danger" id="resetBtn">初期値に戻す</button>
+    </div>
+    <textarea id="io" placeholder="書き出したデータがここに出ます。コピーして保存してください。読み込むときは、ここに貼り付けてから「貼り付けて読み込む」を押します。"></textarea>
+  </div>
+
+  <p class="disclaimer">自動の数は、木の骨組み（間柱）に面材を1枚張りし、ロス分を足した目安です。床の荷重は、総重量を床面積で割った平均値です。壁の重さは部屋の外周に集中するため、実際の負担はこれより大きくなります。設置できるかどうかは管理会社に確認してください。値段・重さに幅がある材料は、荷重に重いほうの値を使っています。</p>
+</main>
+
+<div class="bar" aria-live="polite">
+  <div class="bar-in">
+    <div class="bar-top">
+      <div><small>合計金額</small><b id="tPrice">-</b></div>
+      <div class="r"><small>総重量（中身込み）</small><b id="tWeight">-</b></div>
+    </div>
+    <div class="meter" id="meter"><i id="meterFill"></i></div>
+    <div class="meter-cap"><span id="loadTxt">-</span><span class="st" id="loadSt">-</span></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const KEY = 'bouon-zairyo-v2', OLDKEY = 'bouon-zairyo-v1';
+  const LIMIT = 180; // kg/m²（1,800N/m²）
+  const CATS = ['骨組み','面材','遮音・吸音','防振','ドア金物','副資材','換気','その他'];
+  const SRC = {memo:'メモ', net:'ネット相場', est:'推定'};
+  const AUTO = {
+    manual:{label:'手入力のみ', u:''},
+    surface:{label:'壁＋天井の面積', u:'m²'},
+    wall:{label:'壁の面積', u:'m²'},
+    ceiling:{label:'天井の面積', u:'m²'},
+    door:{label:'ドアの面積', u:'m²'},
+    doorCount:{label:'ドアの枚数', u:'枚'},
+    frame:{label:'骨組みの木材の長さ', u:'m'},
+    perimeter:{label:'部屋の外周', u:'m'}
+  };
+
+  const ROOM0 = {w:1.8, d:1.8, h:2.1, t:1.62, c:80, p:0.455, dw:0.7, dh:1.8, dn:1, ceil:true};
+  // a: 決め方 / cv: 1単位でまかなえる量 / ly: 重ね・割合 / ls: ロス率 / rd: 端数の単位
+  const ITEMS0 = [
+    {cat:'骨組み',name:'木材（間柱）',size:'45×30×3000mm',unit:'本',qty:36,wMin:1.4,wMax:1.8,pMin:400,pMax:600,src:'memo',a:'frame',cv:3,ly:1,ls:0.1,rd:1},
+    {cat:'面材',name:'石こうボード',size:'厚9.5mm（910×1820）',unit:'枚',qty:19,wMin:10,wMax:11,pMin:650,pMax:650,src:'memo',a:'surface',cv:1.656,ly:1,ls:0.1,rd:1},
+    {cat:'面材',name:'ベニヤ板',size:'厚9.5mm（910×1820）',unit:'枚',qty:1.5,wMin:6,wMax:6,pMin:2000,pMax:2000,src:'memo',a:'door',cv:1.656,ly:2,ls:0,rd:0.5,note:'ドアの両面に張る想定です。'},
+    {cat:'遮音・吸音',name:'旭ファイバーグラス マットエースHG16',size:'50×430×2740mm（1袋15枚）',unit:'袋',qty:1,wMin:14,wMax:14,pMin:15000,pMax:15000,src:'memo',a:'surface',cv:17.67,ly:1,ls:0.05,rd:1,note:'1袋で約17.7m²。骨組みのすき間に詰める想定です。'},
+    {cat:'遮音・吸音',name:'ホワイトキューオン ESW-415',size:'50×415×910mm',unit:'枚',qty:10,wMin:0.56,wMax:0.56,pMin:1866,pMax:1866,src:'net',a:'wall',cv:0.378,ly:0.3,ls:0,rd:1,note:'室内の壁の3割に貼る想定です。単価はネット通販の2枚組価格から計算。'},
+    {cat:'遮音・吸音',name:'遮音シート',size:'厚1.2mm 940mm×10m（面密度2.1kg/m²）',unit:'巻',qty:2,wMin:19,wMax:21,pMin:4400,pMax:7700,src:'net',a:'surface',cv:9.4,ly:1,ls:0.1,rd:1,note:'1巻で約9.4m²。'},
+    {cat:'防振',name:'防振ゴム 倉敷化工 KHS-C7050',size:'',unit:'個',qty:15,wMin:0.04,wMax:0.04,pMin:868,pMax:868,src:'memo',a:'perimeter',cv:0.72,ly:1,ls:0,rd:1,note:'外周に720mm間隔で置く想定です。'},
+    {cat:'ドア金物',name:'グレモンハンドル PH-402',size:'',unit:'個',qty:1,wMin:null,wMax:null,pMin:13849,pMax:13849,src:'memo',a:'doorCount',cv:1,ly:1,ls:0,rd:1},
+    {cat:'ドア金物',name:'受け金具 PH-404',size:'',unit:'個',qty:1,wMin:null,wMax:null,pMin:2463,pMax:2463,src:'memo',a:'doorCount',cv:1,ly:1,ls:0,rd:1},
+    {cat:'ドア金物',name:'蝶番（ステンレス旗丁番）',size:'102mm',unit:'枚',qty:3,wMin:0.25,wMax:0.35,pMin:2500,pMax:2500,src:'net',a:'doorCount',cv:1,ly:3,ls:0,rd:1,note:'ドア1枚に3枚。重さは推定です。'},
+    {cat:'ドア金物',name:'気密パッキン',size:'厚6mm',unit:'個',qty:1,wMin:null,wMax:null,pMin:600,pMax:600,src:'memo',a:'manual',cv:1,ly:1,ls:0,rd:1},
+    {cat:'副資材',name:'石こうボード用ビス',size:'長さ25〜32mm',unit:'箱',qty:1,wMin:1,wMax:1.5,pMin:1000,pMax:1500,src:'est',a:'surface',cv:30,ly:1,ls:0,rd:1,note:'1箱で約30m²分の目安。値段・重さとも推定です。'},
+    {cat:'副資材',name:'コーススレッド（骨組み用）',size:'75mm 徳用箱',unit:'箱',qty:1,wMin:1,wMax:2,pMin:1000,pMax:1500,src:'est',a:'frame',cv:150,ly:1,ls:0,rd:1,note:'1箱で木材約150m分の目安。ホームセンターの徳用箱が1,000円前後。'},
+    {cat:'副資材',name:'変成シリコンコーク',size:'333ml',unit:'本',qty:3,wMin:0.5,wMax:0.5,pMin:648,pMax:998,src:'net',a:'surface',cv:10,ly:1,ls:0,rd:1,note:'10m²に1本の目安。ボードの継ぎ目や周囲のすき間用。'},
+    {cat:'換気',name:'ダクトファン',size:'φ100mm',unit:'台',qty:1,wMin:1,wMax:2,pMin:8000,pMax:10500,src:'net',a:'manual',cv:1,ly:1,ls:0,rd:1,note:'重さは推定。消音ボックスとダクトは別に必要です。'}
+  ];
+
+  let state;
+  const uid = () => Math.random().toString(36).slice(2,9);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const RULE_KEYS = ['a','cv','ly','ls','rd'];
+
+  function fresh(){
+    const items = clone(ITEMS0).map(it => Object.assign({id:uid(), on:true, manual:false, note:''}, it));
+    return {room:clone(ROOM0), items};
+  }
+  function normalize(s){
+    s.room = Object.assign(clone(ROOM0), s.room||{});
+    s.items.forEach(it=>{
+      if(!it.id) it.id = uid();
+      if(it.on==null) it.on = true;
+      if(!it.a){ it.a='manual'; it.cv=1; it.ly=1; it.ls=0; it.rd=1; }
+      if(it.manual==null) it.manual = false;
+      if(it.note==null) it.note='';
+    });
+    return s;
+  }
+  function migrate(old){
+    const s = {room:Object.assign(clone(ROOM0), old.room||{}), items:[]};
+    (old.items||[]).forEach(it=>{
+      const def = ITEMS0.find(d=>d.name===it.name);
+      const n = Object.assign({}, it);
+      if(def){
+        RULE_KEYS.forEach(k=>n[k]=def[k]);
+        n.manual = Math.abs((it.qty||0) - def.qty) > 1e-9; // 以前に手で直した数はそのまま残す
+        if(def.note && !n.note) n.note = def.note;
+      }
+      s.items.push(n);
+    });
+    return normalize(s);
+  }
+  function load(){
+    try{
+      const raw = localStorage.getItem(KEY);
+      if(raw){ const s = JSON.parse(raw); if(s && s.room && Array.isArray(s.items)) return normalize(s); }
+      const old = localStorage.getItem(OLDKEY);
+      if(old){ const s = JSON.parse(old); if(s && s.room && Array.isArray(s.items)) return migrate(s); }
+    }catch(e){}
+    return fresh();
+  }
+  function save(){ try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} }
+
+  const num = v => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+  const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+  const kg = n => (Math.round(n*10)/10).toLocaleString('ja-JP',{maximumFractionDigits:1}) + 'kg';
+  const fmtN = n => (Math.round(n*100)/100).toLocaleString('ja-JP',{maximumFractionDigits:2});
+  const range = (a,b,f) => (b==null || Math.abs(a-b) < 1e-9) ? f(a) : f(a) + '〜' + f(b);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ---- 寸法から基準量を出す ----
+  function geo(){
+    const r = state.room;
+    const W=r.w||0, D=r.d||0, H=r.h||0, p=r.p||0.455;
+    const dn = Math.max(0, r.dn||0);
+    const perim = 2*(W+D);
+    const doorA = (r.dw||0)*(r.dh||0)*dn;
+    const wall = Math.max(0, perim*H - doorA);
+    const ceiling = r.ceil ? W*D : 0;
+    const studs = (L)=> L>0 ? Math.ceil(L/p)+1 : 0;
+    let frame = (2*studs(W) + 2*studs(D))*H + 2*perim;
+    if(r.ceil && W>0 && D>0) frame += studs(Math.max(W,D))*Math.min(W,D);
+    frame += dn*(2*(r.dh||0) + (r.dw||0));
+    return {perim, doorA, wall, ceiling, surface:wall+ceiling, frame, doors:dn, floor:W*D};
+  }
+  function baseOf(a,g){
+    return {surface:g.surface, wall:g.wall, ceiling:g.ceiling, door:g.doorA, doorCount:g.doors, frame:g.frame, perimeter:g.perim}[a];
+  }
+  function autoQty(it,g){
+    if(!it.a || it.a==='manual') return null;
+    const base = baseOf(it.a,g);
+    const cv = it.cv>0 ? it.cv : 1, rd = it.rd>0 ? it.rd : 1;
+    if(!(base>0)) return 0;
+    const raw = base*(it.ly??1)*(1+(it.ls||0))/cv;
+    return Math.ceil(raw/rd - 1e-9)*rd;
+  }
+  function applyAuto(){
+    const g = geo();
+    state.items.forEach(it=>{ if(!it.manual){ const q = autoQty(it,g); if(q!=null) it.qty = q; } });
+    return g;
+  }
+
+  function calc(it){
+    const q = it.qty || 0;
+    const wMin = it.wMin, wMax = it.wMax ?? it.wMin;
+    const pMin = it.pMin ?? 0, pMax = it.pMax ?? it.pMin ?? 0;
+    return {hasW: wMin != null, wMin: wMin!=null ? wMin*q : 0, wMax: wMax!=null ? wMax*q : 0, pMin:pMin*q, pMax:pMax*q};
+  }
+
+  const listEl = document.getElementById('list');
+
+  function infoHTML(it){
+    let line = '';
+    if(it.a && it.a!=='manual'){
+      const g = geo(), base = baseOf(it.a,g), aq = autoQty(it,g);
+      const b = `${AUTO[it.a].label} ${fmtN(base)}${AUTO[it.a].u}`;
+      line = it.manual
+        ? `<div class="autoline"><span class="m">手入力中（自動なら${fmtN(aq)}${esc(it.unit)}）</span><button type="button" data-reauto>自動に戻す</button></div>`
+        : `<div class="autoline"><span class="a">自動：${b} から計算</span></div>`;
+    }
+    return `<div class="info">${line}${it.note?`<div class="note">${esc(it.note)}</div>`:''}</div>`;
+  }
+
+  function itemHTML(it){
+    const c = calc(it);
+    const wUnit = it.wMin != null ? range(it.wMin, it.wMax, kg) : null;
+    const pUnit = range(it.pMin ?? 0, it.pMax, yen);
+    const cvU = AUTO[it.a]?.u || '';
+    return `
+    <div class="item${it.on?'':' off'}" data-id="${it.id}">
+      <div class="itop">
+        <input type="checkbox" data-k="on" ${it.on?'checked':''} aria-label="${esc(it.name)}を計算に含める">
+        <div class="iname"><strong>${esc(it.name)||'（名前なし）'}</strong>${it.size?`<span class="isize">${esc(it.size)}</span>`:''}</div>
+        <span class="tag ${it.src}">${SRC[it.src]||''}</span>
+      </div>
+      <div class="nums">
+        <div class="qty">
+          <button type="button" data-step="-1" aria-label="減らす">−</button>
+          <input type="number" inputmode="decimal" step="0.5" min="0" data-k="qty" value="${it.qty}" aria-label="数量">
+          <span>${esc(it.unit)}</span>
+          <button type="button" data-step="1" aria-label="増やす">＋</button>
+        </div>
+        <div class="val">${c.hasW
+          ? `<b>${range(c.wMin, c.wMax, kg)}</b><small>1${esc(it.unit)} ${wUnit}</small>`
+          : `<span class="missing">重量未入力</span>`}</div>
+        <div class="val"><b>${range(c.pMin, c.pMax, yen)}</b><small>1${esc(it.unit)} ${pUnit}</small></div>
+      </div>
+      ${infoHTML(it)}
+      <details class="edit">
+        <summary>内容を編集</summary>
+        <div class="efields">
+          <label class="f full">名前<input data-k="name" value="${esc(it.name)}"></label>
+          <label class="f full">サイズ・仕様<input data-k="size" value="${esc(it.size)}"></label>
+          <label class="f">分類<select data-k="cat">${CATS.map(x=>`<option${x===it.cat?' selected':''}>${x}</option>`).join('')}</select></label>
+          <label class="f">単位<input data-k="unit" value="${esc(it.unit)}"></label>
+          <label class="f">1${esc(it.unit)}の重さ 最小（kg）<input type="number" inputmode="decimal" step="0.01" data-k="wMin" value="${it.wMin??''}"></label>
+          <label class="f">最大（kg）<input type="number" inputmode="decimal" step="0.01" data-k="wMax" value="${it.wMax??''}"></label>
+          <label class="f">1${esc(it.unit)}の値段 最小（円）<input type="number" inputmode="decimal" step="1" data-k="pMin" value="${it.pMin??''}"></label>
+          <label class="f">最大（円）<input type="number" inputmode="decimal" step="1" data-k="pMax" value="${it.pMax??''}"></label>
+          <label class="f full">数の決め方<select data-k="a">${Object.entries(AUTO).map(([k,v])=>`<option value="${k}"${k===it.a?' selected':''}>${v.label}</option>`).join('')}</select></label>
+          ${it.a && it.a!=='manual' ? `
+          <label class="f">1${esc(it.unit)}でまかなえる量（${cvU}）<input type="number" inputmode="decimal" step="0.01" data-k="cv" value="${it.cv??''}"></label>
+          <label class="f">重ね・倍率<input type="number" inputmode="decimal" step="0.1" data-k="ly" value="${it.ly??1}"></label>
+          <label class="f">ロス（%）<input type="number" inputmode="decimal" step="1" data-k="lsp" value="${Math.round((it.ls||0)*100)}"></label>
+          <label class="f">端数の単位<input type="number" inputmode="decimal" step="0.5" data-k="rd" value="${it.rd??1}"></label>` : ''}
+          <label class="f">情報の出どころ<select data-k="src">${Object.entries(SRC).map(([k,v])=>`<option value="${k}"${k===it.src?' selected':''}>${v}</option>`).join('')}</select></label>
+          <label class="f full">メモ<input data-k="note" value="${esc(it.note)}"></label>
+        </div>
+        <div class="row-btn"><button type="button" class="btn danger" data-del>この材料を削除</button></div>
+      </details>
+    </div>`;
+  }
+
+  function updateCount(){
+    document.getElementById('count').textContent = `${state.items.filter(i=>i.on).length}/${state.items.length}件を計算中`;
+  }
+
+  function renderList(focusId){
+    const open = new Set([...listEl.querySelectorAll('details[open]')].map(d=>d.closest('.item').dataset.id));
+    if(focusId) open.add(focusId);
+    const groups = {};
+    state.items.forEach(it => { (groups[it.cat] = groups[it.cat] || []).push(it); });
+    let html = '';
+    CATS.forEach(cat => { if(groups[cat]) html += `<h3>${cat}</h3>` + groups[cat].map(itemHTML).join(''); });
+    listEl.innerHTML = html || '<p class="lead">材料がありません。「材料を追加」から入れてください。</p>';
+    open.forEach(id=>{ const c = listEl.querySelector(`[data-id="${id}"] details`); if(c) c.open = true; });
+    if(focusId){
+      const card = listEl.querySelector(`[data-id="${focusId}"]`);
+      if(card){ card.scrollIntoView({block:'center'}); }
+    }
+    updateCount();
+  }
+
+  // 入力中の欄を壊さないよう、表示部分だけ差し替える
+  function refreshCard(id, withQty){
+    const it = state.items.find(i=>i.id===id);
+    const card = listEl.querySelector(`[data-id="${id}"]`);
+    if(!it || !card) return;
+    const tmp = document.createElement('div'); tmp.innerHTML = itemHTML(it).trim();
+    const nu = tmp.firstElementChild;
+    card.className = nu.className;
+    const nv = nu.querySelectorAll('.nums .val'), cv = card.querySelectorAll('.nums .val');
+    const parts = [[card.querySelector('.itop'), nu.querySelector('.itop')], [cv[0], nv[0]], [cv[1], nv[1]], [card.querySelector('.info'), nu.querySelector('.info')]];
+    parts.forEach(([a,b])=>{ if(a && b) a.replaceWith(b); });
+    card.querySelector('.qty span').textContent = it.unit;
+    if(withQty) card.querySelector('[data-k="qty"]').value = it.qty;
+  }
+  function refreshAllCards(){ state.items.forEach(it=>refreshCard(it.id, true)); }
+
+  function renderTotals(){
+    const r = state.room, g = geo();
+    const area = g.floor;
+    let pMin=0,pMax=0,wMin=0,wMax=0,missing=0;
+    state.items.forEach(it=>{
+      if(!it.on) return;
+      const c = calc(it);
+      pMin+=c.pMin; pMax+=c.pMax; wMin+=c.wMin; wMax+=c.wMax;
+      if(!c.hasW && (it.qty||0)>0) missing++;
+    });
+    const contents = r.c||0;
+    const totalMax = wMax + contents, totalMin = wMin + contents;
+    const load = area>0 ? totalMax/area : 0;
+    const pct = load/LIMIT*100;
+
+    document.getElementById('roomout').innerHTML = area>0
+      ? `床面積 <b>${area.toFixed(2)}m²</b>（約${(area/(r.t||1.62)).toFixed(1)}畳）<br>壁 ${fmtN(g.wall)}m²、天井 ${fmtN(g.ceiling)}m²、骨組みの木材 約${Math.round(g.frame)}m<br>基準 ${LIMIT}kg/m² で、載せられる重さの目安は <b>${Math.round(area*LIMIT).toLocaleString('ja-JP')}kg</b>`
+      : '床の幅と奥行を入れてください。';
+
+    document.getElementById('tPrice').textContent = range(pMin,pMax,yen);
+    document.getElementById('tWeight').textContent = range(totalMin,totalMax,kg) + (missing?` ＋未入力${missing}件`:'');
+
+    const meter = document.getElementById('meter');
+    document.getElementById('meterFill').style.width = Math.min(pct,100)+'%';
+    const st = document.getElementById('loadSt');
+    meter.classList.remove('warn','over'); st.className='st';
+    if(area<=0){ document.getElementById('loadTxt').textContent='床の広さが未入力'; st.textContent='-'; return; }
+    document.getElementById('loadTxt').textContent = `床の荷重 ${Math.round(load)}kg/m²（1畳あたり ${Math.round(load*(r.t||1.62))}kg）`;
+    if(pct>100){ meter.classList.add('over'); st.classList.add('over'); st.textContent=`基準の${Math.round(pct)}%・超過`; }
+    else if(pct>=80){ meter.classList.add('warn'); st.classList.add('warn'); st.textContent=`基準の${Math.round(pct)}%・余裕少`; }
+    else { st.classList.add('ok'); st.textContent=`基準の${Math.round(pct)}%`; }
+  }
+
+  // ---- 部屋の入力 ----
+  const roomMap = {rw:'w', rd:'d', rh:'h', rt:'t', rc:'c', rp:'p', rdw:'dw', rdh:'dh', rdn:'dn'};
+  function fillRoom(){
+    Object.entries(roomMap).forEach(([id,k])=>{ document.getElementById(id).value = state.room[k] ?? ''; });
+    document.getElementById('rceil').checked = !!state.room.ceil;
+  }
+  function onRoom(){ applyAuto(); save(); refreshAllCards(); renderTotals(); }
+  Object.entries(roomMap).forEach(([id,k])=>{
+    const el = document.getElementById(id);
+    el.addEventListener(el.tagName==='SELECT'?'change':'input', e=>{ state.room[k] = num(e.target.value) ?? 0; onRoom(); });
+  });
+  document.getElementById('rceil').addEventListener('change', e=>{ state.room.ceil = e.target.checked; onRoom(); });
+
+  // ---- 材料の操作 ----
+  function findIt(e){
+    const card = e.target.closest('.item'); if(!card) return null;
+    return state.items.find(i=>i.id===card.dataset.id) || null;
+  }
+  listEl.addEventListener('click', e=>{
+    const it = findIt(e); if(!it) return;
+    const stepBtn = e.target.closest('[data-step]');
+    if(stepBtn){
+      it.qty = Math.max(0, Math.round(((it.qty||0) + Number(stepBtn.dataset.step))*100)/100);
+      if(it.a && it.a!=='manual') it.manual = true;
+      save(); refreshCard(it.id, true); renderTotals(); return;
+    }
+    if(e.target.closest('[data-reauto]')){
+      it.manual = false; applyAuto(); save(); refreshCard(it.id, true); renderTotals(); return;
+    }
+    if(e.target.closest('[data-del]')){
+      if(confirm(`「${it.name||'この材料'}」を削除しますか？`)){
+        state.items = state.items.filter(i=>i.id!==it.id); save(); renderList(); renderTotals();
+      }
+    }
+  });
+  function onField(e){
+    const k = e.target.dataset.k; if(!k) return;
+    const it = findIt(e); if(!it) return;
+    let rerender = false;
+    if(k==='on'){ it.on = e.target.checked; updateCount(); }
+    else if(k==='qty'){ it.qty = Math.max(0, num(e.target.value) ?? 0); if(it.a && it.a!=='manual') it.manual = true; }
+    else if(['wMin','wMax','pMin','pMax','cv','ly','rd'].includes(k)){ it[k] = num(e.target.value); }
+    else if(k==='lsp'){ it.ls = (num(e.target.value) ?? 0)/100; }
+    else if(k==='a'){ it.a = e.target.value; if(it.cv==null) it.cv=1; if(it.ly==null) it.ly=1; if(it.rd==null) it.rd=1; it.manual=false; rerender = true; }
+    else if(k==='cat'){ it.cat = e.target.value; rerender = true; }
+    else { it[k] = e.target.value; }
+    if(['cv','ly','lsp','rd','a'].includes(k)) applyAuto();
+    save();
+    if(rerender) renderList(it.id);
+    else refreshCard(it.id, ['cv','ly','lsp','rd'].includes(k));
+    renderTotals();
+  }
+  listEl.addEventListener('input', e=>{ if(e.target.tagName!=='SELECT' && e.target.type!=='checkbox') onField(e); });
+  listEl.addEventListener('change', e=>{ if(e.target.tagName==='SELECT' || e.target.type==='checkbox') onField(e); });
+
+  document.getElementById('addBtn').addEventListener('click', ()=>{
+    const it = {id:uid(),on:true,manual:false,cat:'その他',name:'',size:'',unit:'個',qty:1,wMin:null,wMax:null,pMin:0,pMax:0,src:'memo',note:'',a:'manual',cv:1,ly:1,ls:0,rd:1};
+    state.items.push(it); save(); renderList(it.id); renderTotals();
+    const n = listEl.querySelector(`[data-id="${it.id}"] [data-k="name"]`); if(n) n.focus();
+  });
+
+  const io = document.getElementById('io');
+  document.getElementById('expBtn').addEventListener('click', ()=>{
+    io.value = JSON.stringify(state); io.focus(); io.select();
+    try{ navigator.clipboard && navigator.clipboard.writeText(io.value); }catch(e){}
+  });
+  document.getElementById('impBtn').addEventListener('click', ()=>{
+    try{
+      const s = JSON.parse(io.value);
+      if(!s || !s.room || !Array.isArray(s.items)) throw new Error();
+      state = s.items.some(i=>i.a) ? normalize(s) : migrate(s);
+      applyAuto(); save(); fillRoom(); renderList(); renderTotals();
+      io.value=''; alert('読み込みました。');
+    }catch(e){ alert('読み込めませんでした。「書き出す」で出したデータをそのまま貼り付けてください。'); }
+  });
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    if(confirm('入力した内容を消して、初期値に戻しますか？')){
+      state = fresh(); applyAuto(); save(); fillRoom(); renderList(); renderTotals();
+    }
+  });
+
+  state = load();
+  applyAuto(); save();
+  fillRoom(); renderList(); renderTotals();
+})();
+</script>
+</body>
+</html>
