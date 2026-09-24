@@ -12,6 +12,7 @@
   --bg:#EEF0ED; --surface:#FFFFFF; --ink:#1F2528; --muted:#5E676B; --line:#CDD2CD;
   --accent:#2E6F62; --accent-soft:#DDEBE7; --warn:#A86B12; --danger:#B83A2E;
   --tag-memo:#E7E9E4; --tag-net:#DDEBE7; --tag-est:#F3E6CF;
+  --zone-ok:#CFE5DE; --zone-warn:#F1DFB8; --zone-over:#F0C9C3;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
@@ -21,12 +22,14 @@
     --bg:#171B1D; --surface:#20262A; --ink:#E8ECEA; --muted:#9AA4A7; --line:#343C40;
     --accent:#6FB7A6; --accent-soft:#233A35; --warn:#E0A74A; --danger:#E0786C;
     --tag-memo:#2B3236; --tag-net:#233A35; --tag-est:#3A3122;
+    --zone-ok:#24433C; --zone-warn:#4A3D22; --zone-over:#4D2A26;
   }
 }
 :root[data-theme="dark"]{
   --bg:#171B1D; --surface:#20262A; --ink:#E8ECEA; --muted:#9AA4A7; --line:#343C40;
   --accent:#6FB7A6; --accent-soft:#233A35; --warn:#E0A74A; --danger:#E0786C;
   --tag-memo:#2B3236; --tag-net:#233A35; --tag-est:#3A3122;
+  --zone-ok:#24433C; --zone-warn:#4A3D22; --zone-over:#4D2A26;
 }
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
@@ -114,21 +117,31 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
 .bar-top small{display:block;color:var(--muted);font-size:.75rem}
 .bar-top b{font-size:1.05rem;font-weight:700}
 .bar-top .r{text-align:right}
-.meter{position:relative;height:10px;border-radius:5px;background:var(--bg);margin-top:8px;overflow:hidden}
-.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--accent);transition:width .25s ease}
-.meter.warn i{background:var(--warn)}
-.meter.over i{background:var(--danger)}
+.meter{position:relative;height:12px;border-radius:6px;margin-top:8px;display:flex;overflow:visible}
+.meter .z{height:100%}
+.meter .z1{background:var(--zone-ok);border-radius:6px 0 0 6px}
+.meter .z2{background:var(--zone-warn)}
+.meter .z3{background:var(--zone-over);border-radius:0 6px 6px 0}
+.meter i{position:absolute;top:-3px;bottom:-3px;width:4px;margin-left:-2px;border-radius:2px;background:var(--ink);transition:left .25s ease}
+.meter-ticks{position:relative;height:14px;font-size:.66rem;color:var(--muted)}
+.meter-ticks span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+.meter-ticks span:first-child{transform:none}
+.meter-ticks span:last-child{transform:translateX(-100%)}
+.bar-top small.sub2{font-size:.72rem;margin-top:1px}
+.status{font-size:.82rem;color:var(--accent);margin-top:8px;min-height:1.2em}
 .meter-cap{display:flex;justify-content:space-between;font-size:.72rem;color:var(--muted);margin-top:3px}
 .meter-cap .st{font-weight:500}
 .st.ok{color:var(--accent)} .st.warn{color:var(--warn)} .st.over{color:var(--danger)}
 @media (prefers-reduced-motion: reduce){.meter i{transition:none}}
+.spec{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.spec .full{grid-column:1/-1}
 @media (min-width:520px){.fields{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
 <main>
   <h1>防音室 材料帳</h1>
-  <p class="lead">部屋の寸法を入れると、材料の数が自動で決まります。数は後から手で直せます。</p>
+  <p class="lead">部屋の寸法と仕様を入れると、材料の数が自動で決まります。数は後から手で直せます。</p>
 
   <h2>部屋</h2>
   <div class="panel">
@@ -158,6 +171,29 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
       <label class="f">高さ（m）<input id="rdh" type="number" inputmode="decimal" step="0.01" min="0"></label>
       <label class="f">枚数<input id="rdn" type="number" inputmode="numeric" step="1" min="0"></label>
       <label class="check"><input id="rceil" type="checkbox">天井にもボードや遮音材を張る</label>
+      <p class="sub">仕様</p>
+      <div class="spec">
+        <label class="f">石こうボード
+          <select id="rbl">
+            <option value="1">1枚張り</option>
+            <option value="2">2枚重ね</option>
+            <option value="3">3枚重ね</option>
+          </select>
+        </label>
+        <label class="f">遮音シート
+          <select id="rsl">
+            <option value="1">1重</option>
+            <option value="2">2重</option>
+          </select>
+        </label>
+        <label class="f full">床の構成
+          <select id="rfl">
+            <option value="none">なし（今の床にそのまま置く）</option>
+            <option value="simple">簡易（遮音シート＋タイルカーペット）</option>
+            <option value="floating">浮き床風（根太＋防振マット＋合板12mm＋カーペット）</option>
+          </select>
+        </label>
+      </div>
     </div>
     <div class="roomout" id="roomout"></div>
   </div>
@@ -166,76 +202,91 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
   <div id="list"></div>
   <button class="btn add" id="addBtn">＋ 材料を追加</button>
 
-  <h2>データ</h2>
+  <h2>見積書とデータ</h2>
   <div class="panel">
     <div class="row-btn">
-      <button class="btn" id="expBtn">書き出す</button>
+      <button class="btn primary" id="quoteBtn">見積書をコピー</button>
+      <button class="btn" id="expBtn">データを書き出す</button>
       <button class="btn" id="impBtn">貼り付けて読み込む</button>
       <button class="btn danger" id="resetBtn">初期値に戻す</button>
     </div>
-    <textarea id="io" placeholder="書き出したデータがここに出ます。コピーして保存してください。読み込むときは、ここに貼り付けてから「貼り付けて読み込む」を押します。"></textarea>
+    <p class="status" id="status" role="status"></p>
+    <textarea id="io" placeholder="見積書や書き出したデータがここに出ます。読み込むときは、書き出したデータをここに貼り付けてから「貼り付けて読み込む」を押します。"></textarea>
   </div>
 
-  <p class="disclaimer">自動の数は、木の骨組み（間柱）に面材を1枚張りし、ロス分を足した目安です。床の荷重は、総重量を床面積で割った平均値です。壁の重さは部屋の外周に集中するため、実際の負担はこれより大きくなります。設置できるかどうかは管理会社に確認してください。値段・重さに幅がある材料は、荷重に重いほうの値を使っています。</p>
+  <p class="disclaimer">自動の数は、木の骨組み（間柱）に面材を張り、ロス分を足した目安です。床の荷重は、総重量を床面積で割った平均値です。壁の重さは部屋の外周に集中するため、実際の負担はこれより大きくなります。設置できるかどうかは管理会社に確認してください。値段・重さに幅がある材料は、荷重に重いほうの値を使っています。</p>
 </main>
 
 <div class="bar" aria-live="polite">
   <div class="bar-in">
     <div class="bar-top">
       <div><small>合計金額</small><b id="tPrice">-</b></div>
-      <div class="r"><small>総重量（中身込み）</small><b id="tWeight">-</b></div>
+      <div class="r"><small>総重量（本体＋中身）</small><b id="tWeight">-</b><small class="sub2" id="tBreak"></small></div>
     </div>
-    <div class="meter" id="meter"><i id="meterFill"></i></div>
+    <div class="meter" id="meter" aria-hidden="true">
+      <span class="z z1" style="width:53.33%"></span><span class="z z2" style="width:13.33%"></span><span class="z z3" style="width:33.34%"></span>
+      <i id="meterPin" style="left:0%"></i>
+    </div>
+    <div class="meter-ticks" aria-hidden="true"><span style="left:0">0</span><span style="left:66.67%">基準180</span><span style="left:100%">270kg/m²</span></div>
     <div class="meter-cap"><span id="loadTxt">-</span><span class="st" id="loadSt">-</span></div>
   </div>
 </div>
 
 <script>
 (function(){
-  const KEY = 'bouon-zairyo-v2', OLDKEY = 'bouon-zairyo-v1';
-  const LIMIT = 180; // kg/m²（1,800N/m²）
-  const CATS = ['骨組み','面材','遮音・吸音','防振','ドア金物','副資材','換気','その他'];
+  const KEY = 'bouon-zairyo-v2', OLDKEY = 'bouon-zairyo-v1', VER = 3;
+  const LIMIT = 180;            // kg/m²（1,800N/m²）
+  const SCALE = LIMIT * 1.5;    // メーターの右端
+  const CATS = ['骨組み','面材','遮音・吸音','防振','床','ドア金物','副資材','換気','その他'];
   const SRC = {memo:'メモ', net:'ネット相場', est:'推定'};
+  const FLOOR = {none:'なし', simple:'簡易', floating:'浮き床風'};
   const AUTO = {
     manual:{label:'手入力のみ', u:''},
     surface:{label:'壁＋天井の面積', u:'m²'},
     wall:{label:'壁の面積', u:'m²'},
     ceiling:{label:'天井の面積', u:'m²'},
+    floor:{label:'床の面積', u:'m²'},
     door:{label:'ドアの面積', u:'m²'},
     doorCount:{label:'ドアの枚数', u:'枚'},
     frame:{label:'骨組みの木材の長さ', u:'m'},
     perimeter:{label:'部屋の外周', u:'m'}
   };
+  const LK = {board:{label:'石こうボードの重ね枚数に合わせる', key:'bl', unit:'枚重ね'}, sheet:{label:'遮音シートの重ね数に合わせる', key:'sl', unit:'重'}};
 
-  const ROOM0 = {w:1.8, d:1.8, h:2.1, t:1.62, c:80, p:0.455, dw:0.7, dh:1.8, dn:1, ceil:true};
-  // a: 決め方 / cv: 1単位でまかなえる量 / ly: 重ね・割合 / ls: ロス率 / rd: 端数の単位
+  const ROOM0 = {w:1.8, d:1.8, h:2.1, t:1.62, c:80, p:0.455, dw:0.7, dh:1.8, dn:1, ceil:true, bl:1, sl:1, floor:'none'};
+  // a: 決め方 / cv: 1単位でまかなえる量 / ly: 重ね・倍率 / ls: ロス率 / rd: 端数の単位
+  // lk: 部屋の仕様（重ね枚数）に連動 / addFloor: 床を作るとき床面積を足す / when: 床の構成で使うとき
   const ITEMS0 = [
-    {cat:'骨組み',name:'木材（間柱）',size:'45×30×3000mm',unit:'本',qty:36,wMin:1.4,wMax:1.8,pMin:400,pMax:600,src:'memo',a:'frame',cv:3,ly:1,ls:0.1,rd:1},
-    {cat:'面材',name:'石こうボード',size:'厚9.5mm（910×1820）',unit:'枚',qty:19,wMin:10,wMax:11,pMin:650,pMax:650,src:'memo',a:'surface',cv:1.656,ly:1,ls:0.1,rd:1},
+    {cat:'骨組み',name:'木材（間柱）',size:'45×30×3000mm',unit:'本',qty:36,wMin:1.4,wMax:1.8,pMin:400,pMax:600,src:'memo',a:'frame',cv:3,ly:1,ls:0.1,rd:1,note:'浮き床風にすると、床の根太の分も足されます。'},
+    {cat:'面材',name:'石こうボード',size:'厚9.5mm（910×1820）',unit:'枚',qty:19,wMin:10,wMax:11,pMin:650,pMax:650,src:'memo',a:'surface',cv:1.656,ly:1,ls:0.1,rd:1,lk:'board'},
     {cat:'面材',name:'ベニヤ板',size:'厚9.5mm（910×1820）',unit:'枚',qty:1.5,wMin:6,wMax:6,pMin:2000,pMax:2000,src:'memo',a:'door',cv:1.656,ly:2,ls:0,rd:0.5,note:'ドアの両面に張る想定です。'},
     {cat:'遮音・吸音',name:'旭ファイバーグラス マットエースHG16',size:'50×430×2740mm（1袋15枚）',unit:'袋',qty:1,wMin:14,wMax:14,pMin:15000,pMax:15000,src:'memo',a:'surface',cv:17.67,ly:1,ls:0.05,rd:1,note:'1袋で約17.7m²。骨組みのすき間に詰める想定です。'},
     {cat:'遮音・吸音',name:'ホワイトキューオン ESW-415',size:'50×415×910mm',unit:'枚',qty:10,wMin:0.56,wMax:0.56,pMin:1866,pMax:1866,src:'net',a:'wall',cv:0.378,ly:0.3,ls:0,rd:1,note:'室内の壁の3割に貼る想定です。単価はネット通販の2枚組価格から計算。'},
-    {cat:'遮音・吸音',name:'遮音シート',size:'厚1.2mm 940mm×10m（面密度2.1kg/m²）',unit:'巻',qty:2,wMin:19,wMax:21,pMin:4400,pMax:7700,src:'net',a:'surface',cv:9.4,ly:1,ls:0.1,rd:1,note:'1巻で約9.4m²。'},
+    {cat:'遮音・吸音',name:'遮音シート',size:'厚1.2mm 940mm×10m（面密度2.1kg/m²）',unit:'巻',qty:2,wMin:19,wMax:21,pMin:4400,pMax:7700,src:'net',a:'surface',cv:9.4,ly:1,ls:0.1,rd:1,lk:'sheet',addFloor:true,note:'1巻で約9.4m²。床を作るときは床の分も足されます。'},
     {cat:'防振',name:'防振ゴム 倉敷化工 KHS-C7050',size:'',unit:'個',qty:15,wMin:0.04,wMax:0.04,pMin:868,pMax:868,src:'memo',a:'perimeter',cv:0.72,ly:1,ls:0,rd:1,note:'外周に720mm間隔で置く想定です。'},
+    {cat:'床',name:'防振マット（ゴム）',size:'厚10mm 910×455mm',unit:'枚',qty:0,wMin:4,wMax:4.4,pMin:1500,pMax:2500,src:'est',a:'floor',cv:0.414,ly:1,ls:0.05,rd:1,when:'floating',note:'床全面に敷く想定。重さは商品情報から、値段は推定です。'},
+    {cat:'床',name:'構造用合板',size:'厚12mm（910×1820）',unit:'枚',qty:0,wMin:10.3,wMax:10.5,pMin:2000,pMax:3000,src:'net',a:'floor',cv:1.656,ly:1,ls:0.1,rd:1,when:'floating',note:'浮き床の床板。'},
+    {cat:'床',name:'タイルカーペット',size:'50cm角 20枚入り（5m²）',unit:'ケース',qty:0,wMin:20,wMax:20,pMin:8980,pMax:14270,src:'net',a:'floor',cv:5,ly:1,ls:0,rd:1,when:'floor',note:'約4kg/m²。'},
     {cat:'ドア金物',name:'グレモンハンドル PH-402',size:'',unit:'個',qty:1,wMin:null,wMax:null,pMin:13849,pMax:13849,src:'memo',a:'doorCount',cv:1,ly:1,ls:0,rd:1},
     {cat:'ドア金物',name:'受け金具 PH-404',size:'',unit:'個',qty:1,wMin:null,wMax:null,pMin:2463,pMax:2463,src:'memo',a:'doorCount',cv:1,ly:1,ls:0,rd:1},
     {cat:'ドア金物',name:'蝶番（ステンレス旗丁番）',size:'102mm',unit:'枚',qty:3,wMin:0.25,wMax:0.35,pMin:2500,pMax:2500,src:'net',a:'doorCount',cv:1,ly:3,ls:0,rd:1,note:'ドア1枚に3枚。重さは推定です。'},
     {cat:'ドア金物',name:'気密パッキン',size:'厚6mm',unit:'個',qty:1,wMin:null,wMax:null,pMin:600,pMax:600,src:'memo',a:'manual',cv:1,ly:1,ls:0,rd:1},
-    {cat:'副資材',name:'石こうボード用ビス',size:'長さ25〜32mm',unit:'箱',qty:1,wMin:1,wMax:1.5,pMin:1000,pMax:1500,src:'est',a:'surface',cv:30,ly:1,ls:0,rd:1,note:'1箱で約30m²分の目安。値段・重さとも推定です。'},
+    {cat:'副資材',name:'石こうボード用ビス',size:'長さ25〜32mm',unit:'箱',qty:1,wMin:1,wMax:1.5,pMin:1000,pMax:1500,src:'est',a:'surface',cv:30,ly:1,ls:0,rd:1,lk:'board',note:'1箱で約30m²分の目安。値段・重さとも推定です。'},
     {cat:'副資材',name:'コーススレッド（骨組み用）',size:'75mm 徳用箱',unit:'箱',qty:1,wMin:1,wMax:2,pMin:1000,pMax:1500,src:'est',a:'frame',cv:150,ly:1,ls:0,rd:1,note:'1箱で木材約150m分の目安。ホームセンターの徳用箱が1,000円前後。'},
     {cat:'副資材',name:'変成シリコンコーク',size:'333ml',unit:'本',qty:3,wMin:0.5,wMax:0.5,pMin:648,pMax:998,src:'net',a:'surface',cv:10,ly:1,ls:0,rd:1,note:'10m²に1本の目安。ボードの継ぎ目や周囲のすき間用。'},
     {cat:'換気',name:'ダクトファン',size:'φ100mm',unit:'台',qty:1,wMin:1,wMax:2,pMin:8000,pMax:10500,src:'net',a:'manual',cv:1,ly:1,ls:0,rd:1,note:'重さは推定。消音ボックスとダクトは別に必要です。'}
   ];
+  const NEW_IN_V3 = ['防振マット（ゴム）','構造用合板','タイルカーペット'];
+  const LINK_KEYS = ['lk','addFloor','when'];
 
   let state;
   const uid = () => Math.random().toString(36).slice(2,9);
   const clone = o => JSON.parse(JSON.stringify(o));
-  const RULE_KEYS = ['a','cv','ly','ls','rd'];
+  const RULE_KEYS = ['a','cv','ly','ls','rd','lk','addFloor','when'];
+  const mkItem = d => Object.assign({id:uid(), on:true, manual:false, note:''}, clone(d));
 
-  function fresh(){
-    const items = clone(ITEMS0).map(it => Object.assign({id:uid(), on:true, manual:false, note:''}, it));
-    return {room:clone(ROOM0), items};
-  }
+  function fresh(){ return {ver:VER, room:clone(ROOM0), items:ITEMS0.map(mkItem)}; }
+
   function normalize(s){
     s.room = Object.assign(clone(ROOM0), s.room||{});
     s.items.forEach(it=>{
@@ -245,16 +296,29 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
       if(it.manual==null) it.manual = false;
       if(it.note==null) it.note='';
     });
+    if((s.ver||2) < 3){
+      // 既存の材料に仕様との連動を足し、床の材料を追加する（手で直した値はそのまま）
+      s.items.forEach(it=>{
+        const def = ITEMS0.find(d=>d.name===it.name); if(!def) return;
+        LINK_KEYS.forEach(k=>{ if(it[k]==null && def[k]!=null) it[k]=def[k]; });
+        if(it.name==='木材（間柱）' && !it.note) it.note = def.note;
+        if(it.name==='遮音シート' && def.note) it.note = def.note;
+      });
+      NEW_IN_V3.forEach(n=>{
+        if(!s.items.some(i=>i.name===n)){ const d = ITEMS0.find(x=>x.name===n); if(d) s.items.push(mkItem(d)); }
+      });
+    }
+    s.ver = VER;
     return s;
   }
   function migrate(old){
-    const s = {room:Object.assign(clone(ROOM0), old.room||{}), items:[]};
+    const s = {ver:2, room:Object.assign(clone(ROOM0), old.room||{}), items:[]};
     (old.items||[]).forEach(it=>{
       const def = ITEMS0.find(d=>d.name===it.name);
       const n = Object.assign({}, it);
       if(def){
-        RULE_KEYS.forEach(k=>n[k]=def[k]);
-        n.manual = Math.abs((it.qty||0) - def.qty) > 1e-9; // 以前に手で直した数はそのまま残す
+        ['a','cv','ly','ls','rd'].forEach(k=>n[k]=def[k]);
+        n.manual = Math.abs((it.qty||0) - def.qty) > 1e-9;
         if(def.note && !n.note) n.note = def.note;
       }
       s.items.push(n);
@@ -288,21 +352,35 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     const doorA = (r.dw||0)*(r.dh||0)*dn;
     const wall = Math.max(0, perim*H - doorA);
     const ceiling = r.ceil ? W*D : 0;
-    const studs = (L)=> L>0 ? Math.ceil(L/p)+1 : 0;
-    let frame = (2*studs(W) + 2*studs(D))*H + 2*perim;
-    if(r.ceil && W>0 && D>0) frame += studs(Math.max(W,D))*Math.min(W,D);
+    const floorA = W*D;
+    const studs = (L,pp)=> L>0 ? Math.ceil(L/pp)+1 : 0;
+    let frame = (2*studs(W,p) + 2*studs(D,p))*H + 2*perim;
+    if(r.ceil && W>0 && D>0) frame += studs(Math.max(W,D),p)*Math.min(W,D);
     frame += dn*(2*(r.dh||0) + (r.dw||0));
-    return {perim, doorA, wall, ceiling, surface:wall+ceiling, frame, doors:dn, floor:W*D};
+    let floorJoist = 0;
+    if(r.floor==='floating' && W>0 && D>0) floorJoist = studs(Math.max(W,D),0.303)*Math.min(W,D);
+    frame += floorJoist;
+    return {perim, doorA, wall, ceiling, surface:wall+ceiling, floorA, frame, floorJoist, doors:dn, floor:floorA, floorMode:r.floor||'none'};
   }
   function baseOf(a,g){
-    return {surface:g.surface, wall:g.wall, ceiling:g.ceiling, door:g.doorA, doorCount:g.doors, frame:g.frame, perimeter:g.perim}[a];
+    return {surface:g.surface, wall:g.wall, ceiling:g.ceiling, floor:g.floorA, door:g.doorA, doorCount:g.doors, frame:g.frame, perimeter:g.perim}[a];
   }
+  function whenOK(it){
+    const f = state.room.floor || 'none';
+    if(!it.when) return true;
+    if(it.when==='floor') return f!=='none';
+    return it.when===f;
+  }
+  function mult(it){ return it.lk && LK[it.lk] ? (state.room[LK[it.lk].key]||1) : 1; }
   function autoQty(it,g){
     if(!it.a || it.a==='manual') return null;
-    const base = baseOf(it.a,g);
+    if(!whenOK(it)) return 0;
+    const base = baseOf(it.a,g) || 0;
     const cv = it.cv>0 ? it.cv : 1, rd = it.rd>0 ? it.rd : 1;
-    if(!(base>0)) return 0;
-    const raw = base*(it.ly??1)*(1+(it.ls||0))/cv;
+    let need = base*(it.ly??1)*mult(it);
+    if(it.addFloor && g.floorMode!=='none') need += g.floorA;
+    if(!(need>0)) return 0;
+    const raw = need*(1+(it.ls||0))/cv;
     return Math.ceil(raw/rd - 1e-9)*rd;
   }
   function applyAuto(){
@@ -310,6 +388,7 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     state.items.forEach(it=>{ if(!it.manual){ const q = autoQty(it,g); if(q!=null) it.qty = q; } });
     return g;
   }
+  const counts = it => it.on && whenOK(it);
 
   function calc(it){
     const q = it.qty || 0;
@@ -322,9 +401,14 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
 
   function infoHTML(it){
     let line = '';
-    if(it.a && it.a!=='manual'){
+    if(!whenOK(it)){
+      const need = it.when==='floor' ? '「簡易」か「浮き床風」' : `「${FLOOR[it.when]||it.when}」`;
+      line = `<div class="autoline"><span class="m">床の構成を${need}にすると計算に入ります</span></div>`;
+    } else if(it.a && it.a!=='manual'){
       const g = geo(), base = baseOf(it.a,g), aq = autoQty(it,g);
-      const b = `${AUTO[it.a].label} ${fmtN(base)}${AUTO[it.a].u}`;
+      let b = `${AUTO[it.a].label} ${fmtN(base)}${AUTO[it.a].u}`;
+      if(it.lk && mult(it)>1) b += `×${mult(it)}${LK[it.lk].unit}`;
+      if(it.addFloor && g.floorMode!=='none') b += `＋床 ${fmtN(g.floorA)}m²`;
       line = it.manual
         ? `<div class="autoline"><span class="m">手入力中（自動なら${fmtN(aq)}${esc(it.unit)}）</span><button type="button" data-reauto>自動に戻す</button></div>`
         : `<div class="autoline"><span class="a">自動：${b} から計算</span></div>`;
@@ -338,7 +422,7 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     const pUnit = range(it.pMin ?? 0, it.pMax, yen);
     const cvU = AUTO[it.a]?.u || '';
     return `
-    <div class="item${it.on?'':' off'}" data-id="${it.id}">
+    <div class="item${counts(it)?'':' off'}" data-id="${it.id}">
       <div class="itop">
         <input type="checkbox" data-k="on" ${it.on?'checked':''} aria-label="${esc(it.name)}を計算に含める">
         <div class="iname"><strong>${esc(it.name)||'（名前なし）'}</strong>${it.size?`<span class="isize">${esc(it.size)}</span>`:''}</div>
@@ -373,7 +457,9 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
           <label class="f">1${esc(it.unit)}でまかなえる量（${cvU}）<input type="number" inputmode="decimal" step="0.01" data-k="cv" value="${it.cv??''}"></label>
           <label class="f">重ね・倍率<input type="number" inputmode="decimal" step="0.1" data-k="ly" value="${it.ly??1}"></label>
           <label class="f">ロス（%）<input type="number" inputmode="decimal" step="1" data-k="lsp" value="${Math.round((it.ls||0)*100)}"></label>
-          <label class="f">端数の単位<input type="number" inputmode="decimal" step="0.5" data-k="rd" value="${it.rd??1}"></label>` : ''}
+          <label class="f">端数の単位<input type="number" inputmode="decimal" step="0.5" data-k="rd" value="${it.rd??1}"></label>
+          <label class="f full">仕様との連動<select data-k="lk"><option value="">連動しない</option>${Object.entries(LK).map(([k,v])=>`<option value="${k}"${k===it.lk?' selected':''}>${v.label}</option>`).join('')}</select></label>` : ''}
+          <label class="f">使う床の構成<select data-k="when"><option value="">いつも使う</option><option value="floor"${it.when==='floor'?' selected':''}>床を作るとき</option><option value="floating"${it.when==='floating'?' selected':''}>浮き床風のとき</option><option value="simple"${it.when==='simple'?' selected':''}>簡易のとき</option></select></label>
           <label class="f">情報の出どころ<select data-k="src">${Object.entries(SRC).map(([k,v])=>`<option value="${k}"${k===it.src?' selected':''}>${v}</option>`).join('')}</select></label>
           <label class="f full">メモ<input data-k="note" value="${esc(it.note)}"></label>
         </div>
@@ -383,7 +469,7 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
   }
 
   function updateCount(){
-    document.getElementById('count').textContent = `${state.items.filter(i=>i.on).length}/${state.items.length}件を計算中`;
+    document.getElementById('count').textContent = `${state.items.filter(counts).length}/${state.items.length}件を計算中`;
   }
 
   function renderList(focusId){
@@ -416,46 +502,91 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     card.querySelector('.qty span').textContent = it.unit;
     if(withQty) card.querySelector('[data-k="qty"]').value = it.qty;
   }
-  function refreshAllCards(){ state.items.forEach(it=>refreshCard(it.id, true)); }
+  function refreshAllCards(){ state.items.forEach(it=>refreshCard(it.id, true)); updateCount(); }
 
-  function renderTotals(){
+  function totals(){
     const r = state.room, g = geo();
-    const area = g.floor;
-    let pMin=0,pMax=0,wMin=0,wMax=0,missing=0;
+    let pMin=0,pMax=0,wMin=0,wMax=0; const missing=[];
     state.items.forEach(it=>{
-      if(!it.on) return;
+      if(!counts(it)) return;
       const c = calc(it);
       pMin+=c.pMin; pMax+=c.pMax; wMin+=c.wMin; wMax+=c.wMax;
-      if(!c.hasW && (it.qty||0)>0) missing++;
+      if(!c.hasW && (it.qty||0)>0) missing.push(it.name);
     });
     const contents = r.c||0;
-    const totalMax = wMax + contents, totalMin = wMin + contents;
-    const load = area>0 ? totalMax/area : 0;
-    const pct = load/LIMIT*100;
+    const area = g.floor;
+    const load = area>0 ? (wMax+contents)/area : 0;
+    return {g, pMin, pMax, wMin, wMax, contents, missing, area, load, pct: load/LIMIT*100};
+  }
 
-    document.getElementById('roomout').innerHTML = area>0
-      ? `床面積 <b>${area.toFixed(2)}m²</b>（約${(area/(r.t||1.62)).toFixed(1)}畳）<br>壁 ${fmtN(g.wall)}m²、天井 ${fmtN(g.ceiling)}m²、骨組みの木材 約${Math.round(g.frame)}m<br>基準 ${LIMIT}kg/m² で、載せられる重さの目安は <b>${Math.round(area*LIMIT).toLocaleString('ja-JP')}kg</b>`
+  function renderTotals(){
+    const r = state.room, T = totals(), g = T.g;
+    document.getElementById('roomout').innerHTML = T.area>0
+      ? `床面積 <b>${T.area.toFixed(2)}m²</b>（約${(T.area/(r.t||1.62)).toFixed(1)}畳）<br>壁 ${fmtN(g.wall)}m²、天井 ${fmtN(g.ceiling)}m²、骨組みの木材 約${Math.round(g.frame)}m${g.floorJoist?`（うち床の根太 約${Math.round(g.floorJoist)}m）`:''}<br>基準 ${LIMIT}kg/m² で、載せられる重さの目安は <b>${Math.round(T.area*LIMIT).toLocaleString('ja-JP')}kg</b>`
       : '床の幅と奥行を入れてください。';
 
-    document.getElementById('tPrice').textContent = range(pMin,pMax,yen);
-    document.getElementById('tWeight').textContent = range(totalMin,totalMax,kg) + (missing?` ＋未入力${missing}件`:'');
+    document.getElementById('tPrice').textContent = range(T.pMin,T.pMax,yen);
+    document.getElementById('tWeight').textContent = range(T.wMin+T.contents, T.wMax+T.contents, kg);
+    document.getElementById('tBreak').textContent = `本体 ${range(T.wMin,T.wMax,kg)}＋中身 ${kg(T.contents)}` + (T.missing.length?`（未入力${T.missing.length}件）`:'');
 
-    const meter = document.getElementById('meter');
-    document.getElementById('meterFill').style.width = Math.min(pct,100)+'%';
-    const st = document.getElementById('loadSt');
-    meter.classList.remove('warn','over'); st.className='st';
-    if(area<=0){ document.getElementById('loadTxt').textContent='床の広さが未入力'; st.textContent='-'; return; }
-    document.getElementById('loadTxt').textContent = `床の荷重 ${Math.round(load)}kg/m²（1畳あたり ${Math.round(load*(r.t||1.62))}kg）`;
-    if(pct>100){ meter.classList.add('over'); st.classList.add('over'); st.textContent=`基準の${Math.round(pct)}%・超過`; }
-    else if(pct>=80){ meter.classList.add('warn'); st.classList.add('warn'); st.textContent=`基準の${Math.round(pct)}%・余裕少`; }
-    else { st.classList.add('ok'); st.textContent=`基準の${Math.round(pct)}%`; }
+    document.getElementById('meterPin').style.left = Math.min(100, T.load/SCALE*100) + '%';
+    const st = document.getElementById('loadSt'); st.className='st';
+    if(T.area<=0){ document.getElementById('loadTxt').textContent='床の広さが未入力'; st.textContent='-'; return; }
+    document.getElementById('loadTxt').textContent = `床の荷重 ${Math.round(T.load)}kg/m²（1畳あたり ${Math.round(T.load*(r.t||1.62))}kg）`;
+    if(T.pct>100){ st.classList.add('over'); st.textContent=`基準の${Math.round(T.pct)}%・超過`; }
+    else if(T.pct>=80){ st.classList.add('warn'); st.textContent=`基準の${Math.round(T.pct)}%・余裕少`; }
+    else { st.classList.add('ok'); st.textContent=`基準の${Math.round(T.pct)}%`; }
+  }
+
+  // ---- 見積書 ----
+  function quoteText(){
+    const r = state.room, T = totals();
+    const d = new Date();
+    const L = [];
+    L.push(`【防音室 見積書】${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`);
+    L.push(`部屋：幅${fmtN(r.w)}m × 奥行${fmtN(r.d)}m × 高さ${fmtN(r.h)}m（約${(T.area/(r.t||1.62)).toFixed(1)}畳）`);
+    L.push(`仕様：ボード${r.bl>1?r.bl+'枚重ね':'1枚張り'}／遮音シート${r.sl}重／床 ${FLOOR[r.floor]||'なし'}／天井${r.ceil?'あり':'なし'}`);
+    L.push('────────────');
+    CATS.forEach(cat=>{
+      const rows = state.items.filter(it=>it.cat===cat && counts(it) && (it.qty||0)>0);
+      if(!rows.length) return;
+      L.push(`■${cat}`);
+      rows.forEach(it=>{
+        const c = calc(it);
+        L.push(`・${it.name}${it.size?`　${it.size}`:''}`);
+        L.push(`　${fmtN(it.qty)}${it.unit}　${range(c.pMin,c.pMax,yen)}　${c.hasW?range(c.wMin,c.wMax,kg):'重量未入力'}`);
+      });
+    });
+    L.push('────────────');
+    L.push(`合計：${range(T.pMin,T.pMax,yen)}`);
+    L.push(`重さ：本体 ${range(T.wMin,T.wMax,kg)} ＋ 中身 ${kg(T.contents)}`);
+    if(T.area>0) L.push(`床の荷重：${Math.round(T.load)}kg/m²（基準${LIMIT}kg/m²の${Math.round(T.pct)}%）`);
+    if(T.missing.length) L.push(`※重量未入力：${T.missing.join('、')}`);
+    L.push('※床の荷重は平均値の目安です。設置の可否は管理会社に確認してください。');
+    return L.join('\n');
+  }
+  const statusEl = document.getElementById('status');
+  function copyText(text, okMsg){
+    const io = document.getElementById('io');
+    io.value = text;
+    const fallback = ()=>{
+      io.focus(); io.select();
+      let ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+      statusEl.textContent = ok ? okMsg : '自動でコピーできませんでした。下の欄を長押ししてコピーしてください。';
+    };
+    try{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(()=>{ statusEl.textContent = okMsg; }, fallback);
+      } else fallback();
+    }catch(e){ fallback(); }
   }
 
   // ---- 部屋の入力 ----
-  const roomMap = {rw:'w', rd:'d', rh:'h', rt:'t', rc:'c', rp:'p', rdw:'dw', rdh:'dh', rdn:'dn'};
+  const roomMap = {rw:'w', rd:'d', rh:'h', rt:'t', rc:'c', rp:'p', rdw:'dw', rdh:'dh', rdn:'dn', rbl:'bl', rsl:'sl'};
   function fillRoom(){
     Object.entries(roomMap).forEach(([id,k])=>{ document.getElementById(id).value = state.room[k] ?? ''; });
     document.getElementById('rceil').checked = !!state.room.ceil;
+    document.getElementById('rfl').value = state.room.floor || 'none';
   }
   function onRoom(){ applyAuto(); save(); refreshAllCards(); renderTotals(); }
   Object.entries(roomMap).forEach(([id,k])=>{
@@ -463,6 +594,7 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     el.addEventListener(el.tagName==='SELECT'?'change':'input', e=>{ state.room[k] = num(e.target.value) ?? 0; onRoom(); });
   });
   document.getElementById('rceil').addEventListener('change', e=>{ state.room.ceil = e.target.checked; onRoom(); });
+  document.getElementById('rfl').addEventListener('change', e=>{ state.room.floor = e.target.value; onRoom(); });
 
   // ---- 材料の操作 ----
   function findIt(e){
@@ -494,14 +626,16 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
     else if(k==='qty'){ it.qty = Math.max(0, num(e.target.value) ?? 0); if(it.a && it.a!=='manual') it.manual = true; }
     else if(['wMin','wMax','pMin','pMax','cv','ly','rd'].includes(k)){ it[k] = num(e.target.value); }
     else if(k==='lsp'){ it.ls = (num(e.target.value) ?? 0)/100; }
+    else if(k==='lk' || k==='when'){ it[k] = e.target.value || undefined; }
     else if(k==='a'){ it.a = e.target.value; if(it.cv==null) it.cv=1; if(it.ly==null) it.ly=1; if(it.rd==null) it.rd=1; it.manual=false; rerender = true; }
     else if(k==='cat'){ it.cat = e.target.value; rerender = true; }
     else { it[k] = e.target.value; }
-    if(['cv','ly','lsp','rd','a'].includes(k)) applyAuto();
+    const affectsAuto = ['cv','ly','lsp','rd','a','lk','when'].includes(k);
+    if(affectsAuto) applyAuto();
     save();
     if(rerender) renderList(it.id);
-    else refreshCard(it.id, ['cv','ly','lsp','rd'].includes(k));
-    renderTotals();
+    else refreshCard(it.id, affectsAuto);
+    renderTotals(); updateCount();
   }
   listEl.addEventListener('input', e=>{ if(e.target.tagName!=='SELECT' && e.target.type!=='checkbox') onField(e); });
   listEl.addEventListener('change', e=>{ if(e.target.tagName==='SELECT' || e.target.type==='checkbox') onField(e); });
@@ -513,22 +647,21 @@ textarea{min-height:120px;font-size:.8rem;margin-top:8px}
   });
 
   const io = document.getElementById('io');
-  document.getElementById('expBtn').addEventListener('click', ()=>{
-    io.value = JSON.stringify(state); io.focus(); io.select();
-    try{ navigator.clipboard && navigator.clipboard.writeText(io.value); }catch(e){}
-  });
+  document.getElementById('quoteBtn').addEventListener('click', ()=> copyText(quoteText(), '見積書をコピーしました。'));
+  document.getElementById('expBtn').addEventListener('click', ()=> copyText(JSON.stringify(state), 'データをコピーしました。メモ帳などに保存してください。'));
   document.getElementById('impBtn').addEventListener('click', ()=>{
     try{
       const s = JSON.parse(io.value);
       if(!s || !s.room || !Array.isArray(s.items)) throw new Error();
       state = s.items.some(i=>i.a) ? normalize(s) : migrate(s);
       applyAuto(); save(); fillRoom(); renderList(); renderTotals();
-      io.value=''; alert('読み込みました。');
-    }catch(e){ alert('読み込めませんでした。「書き出す」で出したデータをそのまま貼り付けてください。'); }
+      io.value=''; statusEl.textContent = 'データを読み込みました。';
+    }catch(e){ statusEl.textContent = '読み込めませんでした。「データを書き出す」で出したものをそのまま貼り付けてください。'; }
   });
   document.getElementById('resetBtn').addEventListener('click', ()=>{
     if(confirm('入力した内容を消して、初期値に戻しますか？')){
       state = fresh(); applyAuto(); save(); fillRoom(); renderList(); renderTotals();
+      statusEl.textContent = '初期値に戻しました。';
     }
   });
 
